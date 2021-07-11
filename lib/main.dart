@@ -1,99 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:todo_list/Todo_Helper.dart';
+import 'package:todo_list/todo_model.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(TodoApp());
 }
 
-//thank you for beean patent with me i have issus with my github account
-//and also thank for your timee
-
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class TodoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Todo List',
       theme: ThemeData(
-        // is not restarted.
         primaryColor: Colors.blue.shade900,
       ),
-      home: MyHomePage(title: 'TODO LIST'),
+      home: TodoHome(title: 'Todo List'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class TodoHome extends StatefulWidget {
+  TodoHome({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _TodoHomeState createState() => _TodoHomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  DemoCode _demoCode = DemoCode();
-  List<DemoCode> _list = [];
+class _TodoHomeState extends State<TodoHome> {
+  TodoModel _currentTodo = TodoModel();
+  List<TodoModel> _list = [];
+
   final _formKey = GlobalKey<FormState>();
+
+  void _submit() {
+    // the statement below is to hide the keyboard.
+    // so when a user submits the todo, it hides the keyboard
+    FocusScope.of(context).unfocus();
+    // what this work for i d
+    // ok?
+    var form = _formKey.currentState;
+    if (form.validate()) {
+      form.save();
+      _list.add(TodoModel(todo: _currentTodo.todo));
+      form.reset();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        brightness: Brightness.dark,
-        title: Text(widget.title),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[_container(), _button(), listbiulder(context)],
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        // NO PROBLEM BRO CARRY
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          brightness: Brightness.dark,
+          title: Text(widget.title),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              _inputBody(),
+              _submitTodoButton(),
+              _todoListBody(context),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  listbiulder(BuildContext context) {
+  Widget _todoListBody(BuildContext context) {
     return Expanded(
       child: Container(
         child: ListView.builder(
             itemCount: _list.length,
-            itemBuilder: (cnt, i) {
+            // cnt is bad naming. use "ctx" or "context"
+            //
+            itemBuilder: (ctx, i) {
               return Padding(
                 padding: EdgeInsets.all(8),
                 child: Dismissible(
-                  key: Key(_list[i].name),
+                  key: Key(_list[i].todo),
                   onDismissed: (d) {
                     _list.removeAt(i);
-                    SnackBar(content: Text(_list[i].name));
-                    showDialog(context: context);
+                    // yes
                   },
                   child: Card(
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 23,
-                        ),
-                      ),
+                          child: IconButton(
+                              onPressed: () {}, icon: Icon(Icons.done))),
                       title: Text(
-                        _list[i].name.toUpperCase(),
+                        _list[i].todo,
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontStyle: FontStyle.normal,
                             fontSize: 18),
-                      ),
-                      subtitle: Text(
-                        _list[i].contact,
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontStyle: FontStyle.normal,
-                        ),
                       ),
                     ),
                   ),
@@ -104,53 +113,36 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  _container() => Form(
+  Widget _inputBody() => Form(
         key: _formKey,
         child: Container(
-          child: Column(
-            children: [
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                ),
-                onSaved: (s) => setState(() => _demoCode.name = s),
-                validator: (vl) => vl.isEmpty ? 'inser your name' : null,
-              ),
-              TextFormField(
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Number',
-                ),
-                validator: (vl) => vl.isEmpty ? 'inser your name' : null,
-                onSaved: (s) => setState(() => _demoCode.contact = s),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-            ],
+            child: Column(children: [
+          TextFormField(
+            decoration: InputDecoration(
+              labelText: 'Todo',
+            ),
+            onSaved: (s) => setState(() => _currentTodo.todo = s),
+            validator: (vl) => vl.isEmpty ? 'input todo' : null,
           ),
-        ),
+          SizedBox(
+            height: 10,
+          ),
+        ])),
       );
 
-  _button() => Container(
+  Widget _submitTodoButton() => Container(
         width: double.infinity,
         color: Theme.of(context).primaryColor,
-        child: FlatButton(
+        child: TextButton(
           onPressed: _submit,
           child: Text(
-            'Submit',
+            'Add Todo',
             style: TextStyle(
-                fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
       );
-
-  _submit() {
-    var form = _formKey.currentState;
-    if (form.validate()) {
-      form.save();
-      _list.add(DemoCode(contact: _demoCode.contact, name: _demoCode.name));
-      form.reset();
-    }
-  }
 }
